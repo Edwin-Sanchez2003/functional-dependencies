@@ -6,16 +6,19 @@
     find functional dependencies in a given
     set of data. This is a bottom-up approach
     to database design.
+    
+    Currently only works for comparing single
+    attributes. Future Development should look
+    to modify the program to check for potential
+    composite keys as well.
 """
 
 import os
 import csv
-import json
-import multiprocessing
+#import json
+#import multiprocessing
 
-import numpy as np
-
-import Dataset
+from Dataset import Dataset
 
 import argparse
 
@@ -60,11 +63,13 @@ def main():
     # to pick up where it left off if interrupted.
 
     # load the data into a dataset object
+    dataset = load_data_csv(file_path=DATA_FILE_PATH)
     
     # evaluate its functional dependencies - store
-    # in a json file
+    # in a dict format.
     
-    # save dependencies into a json file
+    
+    # save possible dependencies into a json file
     
     # NOTE: Keep track of columns that don't end up having anything that
     # they are dependent on. It may be that these are dependent on a
@@ -117,14 +122,36 @@ def is_functionally_dependent (
     assert len(attr_1_values) == len(attr_2_values)
     
     # first, determine the indices of every row with matching values.
+    matching_indices:dict[str, list[int]] = find_matching_indices(attr_values=attr_1_values)
     
-    
+    # for each set, check if the indices
+    # also have matching attr_2_values
+    for indices_list in matching_indices.values():
+        # store the first value from indices list
+        # this value should be the same for ALL
+        # other indices for a functional dependency
+        # to exist (because we already divided into
+        # groups based on attr_1_values that had the
+        # same values).
+        first_index_val:str = attr_2_values[indices_list[0]]
         
+        # loop through indices, checking the 
+        # values in attr_2_values
+        for index in indices_list:
+            if attr_2_values[index] != first_index_val:
+                # if any given category value for 
+                # attr_1_values does not have matching values
+                # for attr_2_values, then deny this functional dependency.
+                return False
+    
+    # we found no issues... this is potentially a functional dependency.
+    return True
 # end is_functionally_dependent
 
+
 def find_matching_indices (
-    attr_values:np.ndarray
-) -> np.ndarray:
+    attr_values:list[str]
+) -> dict[str, list[int]]:
     """
     Finds the indices with matching values
     for a specific attribute (a column in an
@@ -132,9 +159,30 @@ def find_matching_indices (
     
     Inputs:
     --------
-    attr_values : 
+    `attr_values : list[str]`
+        The list of attributes to search through
+        for matching values. Should be a 1-D array.
+        
+    Outputs:
+    --------
+    `matching_indices : dict[str, list[int]]`
+        The list of indices that match each other.
+        This is a python dictionary, where each key
+        is an attribute and the value is a list of
+        indices with that value.
     """
+    # create a dict from the attribute values
+    # only uses unique values
+    matching_indices:dict[str, list[int]] = dict.fromkeys(attr_values, value=[])
     
+    # loop over each value in our 1-D array
+    # finding matching values and sticking into
+    # an array matching its attribute value.
+    for cur_val_index, attr_val in enumerate(attr_values):
+        matching_indices[attr_val].append(cur_val_index)
+    
+    # return the dictionary containing the data
+    return matching_indices
 # end find_matching_indices
 
 
@@ -163,8 +211,15 @@ def load_data_csv (
         dependency evaluation simple.
     """
     
-    
-    
+    # load data from csv file
+    column_names:list[str] = []
+    data:list[list[str]] = []
+    with open(file=file_path, mode="r") as file:
+        csv_reader =  csv.reader(csvfile=file, delimiter=',')
+        column_names = next(csv_reader)
+        data = list(csv_reader)
+
+    return Dataset(column_names=column_names, data=data)
 # end load_data_csv
 
 

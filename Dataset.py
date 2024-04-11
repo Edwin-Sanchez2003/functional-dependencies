@@ -20,9 +20,36 @@ class Dataset(object):
     the data to be used 
     """
     
+    # initialize the dataset with values
+    def __init__ (
+        self, 
+        column_names:list[str], 
+        data:list[list[str]]
+    ) -> None:
+        self.__column_names = column_names
+        self.__data = data
+        
+        
+    def get_column_names (
+        self
+    ) -> list[str]:
+        return self.__column_names
+        
+    
+    def get_data (
+        self
+    )-> list[list[str]]:
+        return self.__data
+    
+    
+    column_names:list[str] = property(
+        fget=get_data,
+        doc="The rows & columns containing our data.")
 
-    def __init__(self) -> None:
-        pass
+    
+    data:list[list[str]] = property(
+        fget=get_data,
+        doc="The rows & columns containing our data.")    
 # end Dataset Class
 
 
