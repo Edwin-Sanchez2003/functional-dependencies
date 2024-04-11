@@ -68,7 +68,6 @@ def main():
     # evaluate its functional dependencies - store
     # in a dict format.
     
-    
     # save possible dependencies into a json file
     
     # NOTE: Keep track of columns that don't end up having anything that
